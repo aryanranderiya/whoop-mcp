@@ -50,6 +50,27 @@ const server = new MCPServer({
 
 registerTools(server);
 
+// mcp-use serves bundled assets under /mcp-use/public/. Expose the WHOOP icon
+// at the standard root paths too, so external favicon resolvers (e.g. GAIA,
+// which fetches /favicon.ico and parses <link rel="icon"> from the host root)
+// can discover it.
+server.app.get("/favicon.ico", (c) =>
+  c.redirect("/mcp-use/public/favicon.ico", 302),
+);
+server.app.get("/", (c) =>
+  c.html(
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"/>` +
+      `<title>WHOOP MCP</title>` +
+      `<link rel="icon" href="/mcp-use/public/favicon.ico" sizes="any"/>` +
+      `<link rel="icon" type="image/png" href="/mcp-use/public/favicon.png"/>` +
+      `<link rel="apple-touch-icon" href="/mcp-use/public/apple-touch-icon.png"/>` +
+      `<meta name="description" content="WHOOP MCP server"/></head>` +
+      `<body style="font-family:system-ui;max-width:40rem;margin:4rem auto;padding:0 1rem">` +
+      `<h1>WHOOP MCP</h1><p>Model Context Protocol server for WHOOP. Connect a client to <code>/mcp</code>.</p>` +
+      `</body></html>`,
+  ),
+);
+
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 console.log(`WHOOP MCP server running on port ${PORT}`);
 server.listen(PORT);
