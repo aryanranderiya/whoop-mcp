@@ -2,7 +2,7 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that gives LLM agents read-only access to your [WHOOP](https://www.whoop.com) data — recovery, sleep, strain, workouts, and profile.
 
-Built on [`mcp-use`](https://docs.mcp-use.com). Hosted at **`https://whoop.aryanranderiya.com/mcp`**.
+Built on [`mcp-use`](https://docs.mcp-use.com). Hosted at **`https://calm-forge-de2rt.run.mcp-use.com/mcp`**.
 
 It is **not** a 1:1 wrapper of the WHOOP REST API. Following ["stop converting REST APIs to MCP"](https://jlowin.dev/blog/stop-converting-rest-apis-to-mcp), tools are curated for agents: one major context tool, token-efficient trimmed responses, unit-converted values (minutes/hours, kcal), and strict input/output schemas — so the model spends fewer round trips and less context.
 
@@ -32,7 +32,7 @@ The client connects to `/mcp`, completes WHOOP consent, and each tool call uses 
 
 In the [WHOOP developer dashboard](https://developer.whoop.com):
 
-- **Redirect URI:** `https://whoop.aryanranderiya.com/oauth/callback` (add `http://localhost:3000/oauth/callback` too for local OAuth testing).
+- **Redirect URI:** `https://calm-forge-de2rt.run.mcp-use.com/oauth/callback` (add `http://localhost:3000/oauth/callback` too for local OAuth testing).
 - **Scopes:** `read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement offline`.
 - **Webhook URL:** not used — leave blank.
 
@@ -43,7 +43,7 @@ Copy `.env.example` to `.env`:
 ```
 WHOOP_CLIENT_ID=...
 WHOOP_CLIENT_SECRET=...
-MCP_URL=https://whoop.aryanranderiya.com   # local: http://localhost:3000
+MCP_URL=https://calm-forge-de2rt.run.mcp-use.com   # local: http://localhost:3000
 ```
 
 `MCP_URL` sets the OAuth `redirect_uri` (`<MCP_URL>/oauth/callback`).
@@ -64,11 +64,11 @@ npx @mcp-use/cli login
 npm run deploy -- --env-file .env
 ```
 
-Then attach the custom domain `whoop.aryanranderiya.com` in the Manufact dashboard (CNAME → `deploy.run.mcp-use.com`) and set `MCP_URL=https://whoop.aryanranderiya.com`.
+Manufact assigns a `*.run.mcp-use.com` URL (this server is at `https://calm-forge-de2rt.run.mcp-use.com`). Set `MCP_URL` to that URL so the OAuth `redirect_uri` matches. To use your own domain instead, add it under Manufact → Domains (CNAME → `deploy.run.mcp-use.com`) and point `MCP_URL` at it.
 
 ## Connect from a client
 
-Add the server URL `https://whoop.aryanranderiya.com/mcp` as a custom MCP server, complete the WHOOP OAuth consent, then ask the agent for your WHOOP status.
+Add the server URL `https://calm-forge-de2rt.run.mcp-use.com/mcp` as a custom MCP server, complete the WHOOP OAuth consent, then ask the agent for your WHOOP status.
 
 ## License
 
