@@ -1,114 +1,55 @@
-import { MCPServer, object, text, completable } from "mcp-use/server";
-import { z } from "zod";
+import { MCPServer, oauthProxy } from "mcp-use/server";
+import {
+  WHOOP_AUTH_ENDPOINT,
+  WHOOP_SCOPES,
+  WHOOP_TOKEN_ENDPOINT,
+} from "./src/constants";
+import { registerTools } from "./src/tools";
+import { verifyWhoopToken, whoopGetUserInfo } from "./src/whoop/auth";
 
-// Create MCP server instance
+const clientId = process.env.WHOOP_CLIENT_ID;
+const clientSecret = process.env.WHOOP_CLIENT_SECRET;
+if (!clientId || !clientSecret) {
+  throw new Error("WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET must be set");
+}
+
+const baseUrl = process.env.MCP_URL || "http://localhost:3000";
+
 const server = new MCPServer({
   name: "whoop-mcp",
-  title: "whoop-mcp", // display name
+  title: "WHOOP",
   version: "1.0.0",
-  description: "My first MCP server with all features",
+  description:
+    "Read-only access to your WHOOP recovery, sleep, strain, workouts, and profile.",
   instructions:
-    "Use fetch-weather for current conditions, read config://settings before assuming user preferences, and use review-code only when the user asks for code feedback.",
-  baseUrl: process.env.MCP_URL || "http://localhost:3000", // Full base URL (e.g., https://myserver.com)
+    "Call whoop_overview first for a quick snapshot (latest recovery, last sleep, day strain, profile). " +
+    "Use whoop_recovery / whoop_sleep / whoop_strain / whoop_workouts for history over a window (default last 7-14 days; pass start/end ISO dates for a specific range). " +
+    "Use whoop_get_cycle / whoop_get_sleep / whoop_get_workout to drill into a specific record by id (ids come from the history tools). " +
+    "All durations are returned in minutes/hours and energy in kcal. Every tool is read-only.",
+  baseUrl,
   favicon: "favicon.ico",
-  websiteUrl: "https://mcp-use.com", // Can be customized later
+  websiteUrl: baseUrl,
   icons: [
     {
-      src: "icon.svg",
-      mimeType: "image/svg+xml",
-      sizes: ["512x512"],
+      src: "favicon.png",
+      mimeType: "image/png",
+      sizes: ["256x256"],
     },
   ],
+  oauth: oauthProxy({
+    authEndpoint: WHOOP_AUTH_ENDPOINT,
+    tokenEndpoint: WHOOP_TOKEN_ENDPOINT,
+    issuer: baseUrl,
+    clientId,
+    clientSecret,
+    scopes: [...WHOOP_SCOPES],
+    verifyToken: verifyWhoopToken,
+    getUserInfo: whoopGetUserInfo,
+  }),
 });
 
-/**
- * Define UI Widgets
- * All React components in the `resources/` folder
- * are automatically registered as MCP tools and resources.
- *
- * Just export widgetMetadata with description and Zod schema,
- * and mcp-use handles the rest!
- *
- * Docs: https://manufact.com/docs/typescript/server/mcp-apps
- */
+registerTools(server);
 
-/*
- * Define MCP tools
- * Docs: https://mcp-use.com/docs/typescript/server/tools
- */
-server.tool(
-  {
-    name: "fetch-weather",
-    title: "Fetch weather",
-    description: "Fetch the weather for a city",
-    schema: z.object({
-      city: z.string().describe("The city to fetch the weather for"),
-    }),
-    // Declare outputSchema for any tool that returns structuredContent so clients
-    // can validate results and the model can reason about follow-up calls.
-    outputSchema: z.object({
-      city: z.string().describe("The city the weather is for"),
-      conditions: z.string().describe("Human-readable weather conditions"),
-      temperature: z.string().describe("Current temperature"),
-    }),
-    // Demo stub — no network. If you call an external weather API, set openWorldHint: true.
-    annotations: {
-      readOnlyHint: true,
-      destructiveHint: false,
-      openWorldHint: false,
-    },
-  },
-  // The returned object is type-checked against the `outputSchema` above:
-  // returning the wrong shape is a compile-time error.
-  async ({ city }) => {
-    return object({ city, conditions: "sunny", temperature: "22°C" });
-  }
-);
-
-/*
- * Define MCP resources
- * Docs: https://mcp-use.com/docs/typescript/server/resources
- */
-server.resource(
-  {
-    name: "config",
-    uri: "config://settings",
-    description: "Server configuration",
-  },
-  async () =>
-    object({
-      theme: "dark",
-      language: "en",
-    })
-);
-
-/*
- * Define MCP prompts
- * Docs: https://mcp-use.com/docs/typescript/server/prompts
- */
-server.prompt(
-  {
-    name: "review-code",
-    description: "Review code for best practices and potential issues",
-    schema: z.object({
-      language: completable(z.string(), [
-        "python",
-        "javascript",
-        "typescript",
-        "java",
-        "cpp",
-        "go",
-        "rust",
-      ]).describe("The programming language"),
-      code: z.string().describe("The code to review"),
-    }),
-  },
-  async ({ language, code }) => {
-    return text(`Reviewing ${language} code:\n\n${code}`);
-  }
-);
-
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-console.log(`Server running on port ${PORT}`);
-// Start the server
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+console.log(`WHOOP MCP server running on port ${PORT}`);
 server.listen(PORT);

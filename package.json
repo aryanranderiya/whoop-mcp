@@ -25,7 +25,10 @@
     "build": "mcp-use build",
     "dev": "mcp-use dev",
     "start": "mcp-use start",
-    "deploy": "mcp-use deploy"
+    "deploy": "mcp-use deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "mcp-use": "latest",
@@ -40,6 +43,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
   }
 }
