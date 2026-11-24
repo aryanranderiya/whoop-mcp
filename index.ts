@@ -13,7 +13,14 @@ if (!clientId || !clientSecret) {
   throw new Error("WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET must be set");
 }
 
-const baseUrl = process.env.MCP_URL || "http://localhost:3000";
+// The origin clients actually reach. Manufact manages MCP_URL itself, and a
+// slug change silently moves it, so the OAuth base URL gets its own variable
+// that only changes when the public hostname does.
+const baseUrl = (
+  process.env.PUBLIC_URL ||
+  process.env.MCP_URL ||
+  "http://localhost:3000"
+).replace(/\/+$/, "");
 
 const server = new MCPServer({
   name: "whoop-mcp",
@@ -66,11 +73,15 @@ server.app.get("/", (c) =>
       `<link rel="apple-touch-icon" href="/mcp-use/public/apple-touch-icon.png"/>` +
       `<meta name="description" content="WHOOP MCP server"/></head>` +
       `<body style="font-family:system-ui;max-width:40rem;margin:4rem auto;padding:0 1rem">` +
-      `<h1>WHOOP MCP</h1><p>Model Context Protocol server for WHOOP. Connect a client to <code>/mcp</code>.</p>` +
+      `<h1>WHOOP MCP</h1><p>Model Context Protocol server for WHOOP. Connect a client to <code>${baseUrl}/mcp</code>.</p>` +
       `</body></html>`,
   ),
 );
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+// Printed at boot because every OAuth discovery URL is derived from it: if this
+// host does not resolve back to this deployment, clients get 401 forever.
 console.log(`WHOOP MCP server running on port ${PORT}`);
+console.log(`WHOOP MCP public URL: ${baseUrl}`);
+console.log(`WHOOP MCP OAuth redirect_uri: ${baseUrl}/oauth/callback`);
 server.listen(PORT);
